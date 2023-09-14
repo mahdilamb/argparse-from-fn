@@ -8,32 +8,29 @@ IDENTITY = lambda val: val
 
 
 def convert(
-    function: Callable, parser: Optional[argparse.ArgumentParser] = None
+    func: Callable, parser: Optional[argparse.ArgumentParser] = None
 ) -> argparse.ArgumentParser:
     """Convert a function to an argument parser."""
     parser = parser or argparse.ArgumentParser()
-    docstring = docstring_parser.parse(function.__doc__ or "")
+    docstring = docstring_parser.parse(func.__doc__ or "")
     docstring_params = {param.arg_name: param for param in docstring.params}
     parser.description = docstring.short_description
-    defaults_start = (
-        len(function.__code__.co_varnames)
-        - function.__code__.co_kwonlyargcount
-        - len(function.__defaults__ or ())
-    )
+    kwargs_from = func.__code__.co_argcount
+    defaults_start = kwargs_from - len(func.__defaults__ or ())
     post_format = {}
-    for argi, arg in enumerate(function.__code__.co_varnames):
-        kwarg_only = (
-            argi
-            >= len(function.__code__.co_varnames) - function.__code__.co_kwonlyargcount
-        )
+    func_code = func.__code__
+    for argi, arg in enumerate(
+        func_code.co_varnames[: func_code.co_argcount + func_code.co_kwonlyargcount]
+    ):
+        kwarg_only = argi >= kwargs_from
         default = None
-        if kwarg_only and function.__kwdefaults__:
-            default = function.__kwdefaults__.get(arg)
-        elif function.__defaults__:
+        if kwarg_only and func.__kwdefaults__:
+            default = func.__kwdefaults__.get(arg)
+        elif func.__defaults__:
             __i = argi - defaults_start
             if __i >= 0:
-                default = function.__defaults__[__i]
-        ftype = function.__annotations__.get(arg, IDENTITY)
+                default = func.__defaults__[__i]
+        ftype = func.__annotations__.get(arg, IDENTITY)
         choices = None
         nargs = None
         action = "store"

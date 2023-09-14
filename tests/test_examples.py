@@ -48,10 +48,10 @@ def no_default_test():
         h: Set[int],
         f: bool,
         g,
-        x: int ,
+        x: int,
         j,
         *,
-        y: int ,
+        y: int,
         z,
     ):
         """Not a real function, for good reasons.
@@ -76,6 +76,29 @@ def no_default_test():
         "y": None,
         "z": None,
     }
+
+
+def kwarg_only_with_defaults_test():
+    def test(
+        *,
+        a: int = 1,
+        b: int = 2,
+        c: int = 3,
+    ):
+        ...
+
+    assert vars(fn2argparse.convert(test).parse_args([])) == dict(a=1, b=2, c=3)
+
+
+def kwarg_only_no_defaults_test():
+    def test(*, a: int, b: int, c: int):
+        ...
+
+    assert vars(
+        fn2argparse.convert(test).parse_args(shlex.split("--a 1 --b 2 --c 3"))
+    ) == dict(a=1, b=2, c=3)
+
+
 if __name__ == "__main__":
     import sys
 
