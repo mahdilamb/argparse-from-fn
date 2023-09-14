@@ -18,7 +18,7 @@ def convert(
     defaults_start = (
         len(function.__code__.co_varnames)
         - function.__code__.co_kwonlyargcount
-        - len(function.__defaults__)
+        - len(function.__defaults__ or ())
     )
     post_format = {}
     for argi, arg in enumerate(function.__code__.co_varnames):
@@ -27,9 +27,9 @@ def convert(
             >= len(function.__code__.co_varnames) - function.__code__.co_kwonlyargcount
         )
         default = None
-        if kwarg_only:
+        if kwarg_only and function.__kwdefaults__:
             default = function.__kwdefaults__.get(arg)
-        else:
+        elif function.__defaults__:
             __i = argi - defaults_start
             if __i >= 0:
                 default = function.__defaults__[__i]
