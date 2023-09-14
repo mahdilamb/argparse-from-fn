@@ -39,10 +39,10 @@ def convert(
                 choices = ftype.__args__
                 ftype = IDENTITY
             elif issubclass(ftype.__origin__, Collection):
-                nargs = "*" # TODO (Mahdi): tuples define length
+                nargs = "*"  # TODO (Mahdi): tuples define length
                 kwarg_only = True
                 post_format[arg] = ftype.__origin__
-                ftype = ftype.__args__[0] # TODO (Mahdi): check for arg type
+                ftype = ftype.__args__[0]  # TODO (Mahdi): check for arg type
         elif isinstance(ftype, type):
             if issubclass(ftype, bool):
                 action = argparse.BooleanOptionalAction
