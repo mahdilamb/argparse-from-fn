@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[project]
+description = "Package for converting a function to an ArgumentParser."
+dynamic = ["version"]
+name = "fn2argparse"
+
+authors = [
+  {name = "Mahdi Lamb", email = "mahdilamb@gmail.com"},
+]
+dependencies = [
+  "docstring-parser==0.15",
+]
+
+[project.optional-dependencies]
+test = [
+  "black",
+  "isort",
+  "mypy",
+  "bandit",
+  "pytest",
+  "pytest-cov",
+  "docformatter",
+  "pydocstyle",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "fn2argparse.__version__"}
+
+[tool.setuptools]
+packages = ["fn2argparse"]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+[tool.docformatter]
+black = true
+recursive = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+python_files = [
+  "test_*.py",
+]
+python_functions = ["*_test"]
+testpaths = [
+  "tests",
+]
