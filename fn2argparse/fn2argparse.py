@@ -8,7 +8,9 @@ import docstring_parser
 SUPPORTED_TYPES = bool, int, float, str, complex
 
 
-def _any(val,):
+def _any(
+    val,
+):
     """Try and convert the value to a primitive type."""
     try:
         return ast.literal_eval(val)
