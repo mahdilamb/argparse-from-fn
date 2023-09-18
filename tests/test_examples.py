@@ -1,7 +1,33 @@
 import shlex
-from typing import Literal, Set
+from typing import Any, Literal, Set, Tuple
 
 import fn2argparse
+
+
+def positionals_no_types_test():
+    def fn(
+        a,
+        b,
+        c,
+    ):
+        ...
+
+    assert vars(fn2argparse.convert(fn).parse_args(shlex.split("1 2 3"))) == dict(
+        a=1, b=2, c=3
+    )
+
+
+def positionals_test():
+    def fn(
+        a: int,
+        b: float,
+        c: bool,
+    ):
+        ...
+
+    parser = fn2argparse.convert(fn)
+    args = parser.parse_args(shlex.split("1 1 --c"))
+    assert vars(args) == dict(a=1, b=1.0, c=True)
 
 
 def initial_test():
@@ -33,9 +59,9 @@ def initial_test():
         "a": "a",
         "h": {1, 0, 2, 3},
         "f": False,
-        "g": "3",
+        "g": 3,
         "x": 4,
-        "j": "5",
+        "j": 5,
         "y": 3,
         "z": 8,
     }
@@ -70,9 +96,9 @@ def no_default_test():
         "a": "a",
         "h": {1, 0, 2, 3},
         "f": False,
-        "g": "3",
+        "g": 3,
         "x": 4,
-        "j": "5",
+        "j": 5,
         "y": None,
         "z": None,
     }
@@ -97,6 +123,22 @@ def kwarg_only_no_defaults_test():
     assert vars(
         fn2argparse.convert(test).parse_args(shlex.split("--a 1 --b 2 --c 3"))
     ) == dict(a=1, b=2, c=3)
+
+
+def tuple_test():
+    def fn(a: Tuple[int, int, str]):
+        ...
+
+    assert vars(fn2argparse.convert(fn).parse_args(shlex.split("--a 1 2 3"))) == dict(
+        a=(1, 2, "3")
+    )
+
+
+def any_test():
+    def fn(a: Any):
+        ...
+
+    assert vars(fn2argparse.convert(fn).parse_args(shlex.split("1"))) == dict(a=1)
 
 
 if __name__ == "__main__":

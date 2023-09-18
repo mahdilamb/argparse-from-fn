@@ -1,10 +1,31 @@
 """Main package containing the parser."""
 import argparse
-from typing import Callable, Collection, Literal, Optional
+import ast
+from typing import Any, Callable, Collection, Literal, Optional, TypeAlias
 
 import docstring_parser
 
-IDENTITY = lambda val: val
+SUPPORTED_TYPES = bool, int, float, str, complex
+
+
+def _any(val,):
+    """Try and convert the value to a primitive type."""
+    try:
+        return ast.literal_eval(val)
+    except ValueError:
+        return val
+
+
+def _tuple(annotation: TypeAlias):
+    """Create a tuple caster."""
+    types = annotation.__args__
+
+    def convert(val):
+        nonlocal types
+        type, *types = types
+        return type(val)
+
+    return convert
 
 
 def convert(
@@ -30,23 +51,37 @@ def convert(
             __i = argi - defaults_start
             if __i >= 0:
                 default = func.__defaults__[__i]
-        ftype = func.__annotations__.get(arg, IDENTITY)
+        ftype = func.__annotations__.get(arg, _any)
         choices = None
         nargs = None
         action = "store"
-        if hasattr(ftype, "__origin__"):
+        if ftype == Any:
+            ftype = _any
+        elif hasattr(ftype, "__origin__"):
             if ftype.__origin__ is Literal:
                 choices = ftype.__args__
-                ftype = IDENTITY
+                ftype = _any
             elif issubclass(ftype.__origin__, Collection):
-                nargs = "*"  # TODO (Mahdi): tuples define length
+                nargs = (
+                    "*"
+                    if not issubclass(ftype.__origin__, tuple)
+                    else len(ftype.__args__)
+                )
                 kwarg_only = True
                 post_format[arg] = ftype.__origin__
-                ftype = ftype.__args__[0]  # TODO (Mahdi): check for arg type
+                ftype = (
+                    ftype.__args__[0]
+                    if not issubclass(ftype.__origin__, tuple)
+                    else _tuple(ftype)
+                )
         elif isinstance(ftype, type):
             if issubclass(ftype, bool):
                 action = argparse.BooleanOptionalAction
                 kwarg_only = True
+            elif not issubclass(ftype, (int, float, str, complex)):
+                raise ValueError("User-defined types not supported")
+        elif ftype != _any:
+            raise ValueError("Unsupported type")
         help = None
         param_help = docstring_params.get(arg)
         if param_help:
